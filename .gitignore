@@ -1,0 +1,8 @@
+target/
+*.class
+*.log
+
+.agents/
+.codex/
+
+.vscode/
