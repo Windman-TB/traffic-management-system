@@ -103,7 +103,7 @@ public class StreetView {
     }
 
     private TableView<Street> createTable() {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         table.setPrefHeight(460);
         table.setStyle(
                 "-fx-background-color: white;" +
@@ -186,7 +186,7 @@ public class StreetView {
             }
         });
 
-        table.getColumns().addAll(
+        table.getColumns().setAll(java.util.List.of(
                 idCol,
                 nameCol,
                 typeCol,
@@ -194,7 +194,7 @@ public class StreetView {
                 createdAtCol,
                 updatedAtCol,
                 actionCol
-        );
+        ));
 
         return table;
     }

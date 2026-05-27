@@ -163,7 +163,7 @@ public class TrafficMonitoringView {
     }
 
     private TableView<TrafficMonitoringRow> createTable() {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         table.setStyle("-fx-background-color: white; -fx-border-color: transparent;");
 
         TableColumn<TrafficMonitoringRow, String> segmentCol = new TableColumn<>("Đoạn đường");
@@ -210,7 +210,16 @@ public class TrafficMonitoringView {
         TableColumn<TrafficMonitoringRow, String> updatedCol = new TableColumn<>("Cập nhật");
         updatedCol.setCellValueFactory(data -> new SimpleStringProperty(controller.formatDateTime(data.getValue().getUpdatedAt())));
 
-        table.getColumns().setAll(segmentCol, streetCol, areaCol, velocityCol, maxCol, ratioCol, statusCol, updatedCol);
+        table.getColumns().setAll(java.util.List.of(
+                segmentCol,
+                streetCol,
+                areaCol,
+                velocityCol,
+                maxCol,
+                ratioCol,
+                statusCol,
+                updatedCol
+        ));
         table.setRowFactory(tv -> {
             TableRow<TrafficMonitoringRow> row = new TableRow<>();
             row.setOnMouseClicked(event -> {

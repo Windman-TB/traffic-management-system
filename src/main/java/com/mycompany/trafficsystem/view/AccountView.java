@@ -152,7 +152,7 @@ public class AccountView {
             }
         });
 
-        table.getColumns().addAll(usernameCol, fullNameCol, roleCol, statusCol, actionCol);
+        table.getColumns().setAll(List.of(usernameCol, fullNameCol, roleCol, statusCol, actionCol));
         return table;
     }
 

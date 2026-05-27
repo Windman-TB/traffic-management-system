@@ -39,7 +39,6 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.FileChooser;
 
 import java.io.File;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -288,7 +287,7 @@ public class SystemLogView {
     }
 
     private TableView<SystemLog> createTable() {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         table.setPrefHeight(360);
 
         TableColumn<SystemLog, String> logIdCol = new TableColumn<>("Mã log");
@@ -319,7 +318,15 @@ public class SystemLogView {
         createdAtCol.setCellValueFactory(data -> new SimpleStringProperty(systemLogController.formatDateTime(data.getValue())));
         createdAtCol.setPrefWidth(150);
 
-        table.getColumns().setAll(logIdCol, accountIdCol, behaviourCol, tableCol, targetIdCol, statusCol, createdAtCol);
+        table.getColumns().setAll(java.util.List.of(
+                logIdCol,
+                accountIdCol,
+                behaviourCol,
+                tableCol,
+                targetIdCol,
+                statusCol,
+                createdAtCol
+        ));
 
         table.setRowFactory(tv -> {
             TableRow<SystemLog> row = new TableRow<>();

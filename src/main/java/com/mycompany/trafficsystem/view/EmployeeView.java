@@ -189,7 +189,7 @@ public class EmployeeView {
             }
         });
 
-        table.getColumns().addAll(
+        table.getColumns().setAll(java.util.List.of(
                 idCol,
                 nameCol,
                 phoneCol,
@@ -199,7 +199,7 @@ public class EmployeeView {
                 salaryCol,
                 statusCol,
                 actionCol
-        );
+        ));
 
         return table;
     }
@@ -413,7 +413,6 @@ public class EmployeeView {
 
         return new EmployeeFormControls(
                 form,
-                employeeIdField,
                 fullNameField,
                 phoneNumberField,
                 emailField,
@@ -503,7 +502,7 @@ public class EmployeeView {
             return "";
         }
 
-        NumberFormat numberFormat = NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+        NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.of("vi", "VN"));
         return numberFormat.format(salary);
     }
 
@@ -546,7 +545,6 @@ public class EmployeeView {
 
     private static class EmployeeFormControls {
         private final GridPane form;
-        private final TextField employeeIdField;
         private final TextField fullNameField;
         private final TextField phoneNumberField;
         private final TextField emailField;
@@ -557,7 +555,6 @@ public class EmployeeView {
         private final ComboBox<String> statusBox;
 
         private EmployeeFormControls(GridPane form,
-                                     TextField employeeIdField,
                                      TextField fullNameField,
                                      TextField phoneNumberField,
                                      TextField emailField,
@@ -567,7 +564,6 @@ public class EmployeeView {
                                      TextField salaryField,
                                      ComboBox<String> statusBox) {
             this.form = form;
-            this.employeeIdField = employeeIdField;
             this.fullNameField = fullNameField;
             this.phoneNumberField = phoneNumberField;
             this.emailField = emailField;

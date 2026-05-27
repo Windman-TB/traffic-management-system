@@ -121,7 +121,7 @@ public class SegmentView {
     }
 
     private TableView<Segment> createTable() {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         table.setPrefHeight(460);
         table.setStyle(
                 "-fx-background-color: white;" +
@@ -213,7 +213,7 @@ public class SegmentView {
             }
         });
 
-        table.getColumns().addAll(
+        table.getColumns().setAll(java.util.List.of(
                 segmentIdCol,
                 streetIdCol,
                 areaIdCol,
@@ -224,7 +224,7 @@ public class SegmentView {
                 createdAtCol,
                 updatedAtCol,
                 actionCol
-        );
+        ));
 
         return table;
     }

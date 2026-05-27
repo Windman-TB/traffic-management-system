@@ -185,7 +185,7 @@ public class TrafficAnalysisView {
         title.setTextFill(Color.web("#111827"));
         title.setFont(Font.font("Arial", FontWeight.BOLD, 14));
 
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 
         TableColumn<TrafficAnalysisRow, String> groupCol = new TableColumn<>("Nhóm");
         groupCol.setCellValueFactory(data -> new SimpleStringProperty(nullToEmpty(data.getValue().getGroupName())));
@@ -214,7 +214,17 @@ public class TrafficAnalysisView {
         TableColumn<TrafficAnalysisRow, String> ratioCol = new TableColumn<>("Velocity/Max");
         ratioCol.setCellValueFactory(data -> new SimpleStringProperty(controller.formatNumber(data.getValue().getAverageVelocityRatio())));
 
-        table.getColumns().setAll(groupCol, recordCol, segmentCol, avgCol, minCol, maxCol, congestionCol, rateCol, ratioCol);
+        table.getColumns().setAll(java.util.List.of(
+                groupCol,
+                recordCol,
+                segmentCol,
+                avgCol,
+                minCol,
+                maxCol,
+                congestionCol,
+                rateCol,
+                ratioCol
+        ));
 
         card.getChildren().addAll(title, table);
         VBox.setVgrow(table, Priority.ALWAYS);

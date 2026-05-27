@@ -116,7 +116,7 @@ public class TrafficView {
     }
 
     private TableView<Traffic> createTable() {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         table.setPrefHeight(460);
         table.setStyle(
                 "-fx-background-color: white;" +
@@ -218,14 +218,14 @@ public class TrafficView {
             }
         });
 
-        table.getColumns().addAll(
+        table.getColumns().setAll(java.util.List.of(
                 statusIdCol,
                 segmentIdCol,
                 velocityCol,
                 statusCol,
                 updatedAtCol,
                 actionCol
-        );
+        ));
 
         return table;
     }

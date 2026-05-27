@@ -190,7 +190,7 @@ public class AreaView {
             }
         });
 
-        table.getColumns().addAll(
+        table.getColumns().setAll(java.util.List.of(
                 idCol,
                 nameCol,
                 typeCol,
@@ -198,7 +198,7 @@ public class AreaView {
                 createdAtCol,
                 updatedAtCol,
                 actionCol
-        );
+        ));
 
         return table;
     }

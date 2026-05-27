@@ -106,7 +106,7 @@ public class NodeView {
     }
 
     private TableView<Node> createTable() {
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
         table.setPrefHeight(460);
         table.setStyle(
                 "-fx-background-color: white;" +
@@ -186,14 +186,14 @@ public class NodeView {
             }
         });
 
-        table.getColumns().addAll(
+        table.getColumns().setAll(java.util.List.of(
                 idCol,
                 latitudeCol,
                 longitudeCol,
                 createdAtCol,
                 updatedAtCol,
                 actionCol
-        );
+        ));
 
         return table;
     }
