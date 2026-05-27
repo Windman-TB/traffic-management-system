@@ -305,9 +305,11 @@ public class TrafficMonitoringView {
         dialog.setHeaderText("Đoạn đường: " + row.getSegmentId());
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
 
-        VBox content = new VBox(12);
+        VBox content = new VBox(14);
         content.setPadding(new Insets(12));
-        content.getChildren().add(new Label(
+        content.setPrefWidth(900);
+
+        Label detailLabel = new Label(
                 "Tuyến đường: " + nullToEmpty(row.getStreetName()) + "\n" +
                 "Khu vực: " + nullToEmpty(row.getAreaName()) + "\n" +
                 "Điểm đầu: " + nullToEmpty(row.getStartNodeId()) + " (" + formatCoordinate(row.getStartLatitude()) + ", " + formatCoordinate(row.getStartLongitude()) + ")\n" +
@@ -317,10 +319,15 @@ public class TrafficMonitoringView {
                 "Tốc độ tối đa: " + (row.getMaxVelocity() == null ? "" : row.getMaxVelocity()) + "\n" +
                 "Trạng thái: " + row.getStatus() + "\n" +
                 "Cập nhật: " + controller.formatDateTime(row.getUpdatedAt())
-        ));
+        );
+        detailLabel.setWrapText(true);
+        detailLabel.setMaxWidth(Double.MAX_VALUE);
+
+        content.getChildren().add(detailLabel);
         content.getChildren().add(createHistoryChart(row.getSegmentId()));
         dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().setPrefSize(780, 560);
+        dialog.getDialogPane().setMinSize(900, 650);
+        dialog.getDialogPane().setPrefSize(960, 720);
         dialog.showAndWait();
     }
 
