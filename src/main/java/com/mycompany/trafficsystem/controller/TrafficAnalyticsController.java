@@ -55,7 +55,7 @@ public class TrafficAnalyticsController {
 
     public boolean exportMonitoringCsv(File file, List<TrafficMonitoringRow> rows) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            writer.write("SEGMENT_ID,STREET_NAME,AREA_NAME,VELOCITY,MAX_VELOCITY,RATIO,STATUS,UPDATED_AT");
+            writer.write("SEGMENT_ID,STREET_NAME,AREA_NAME,VELOCITY,MAX_VELOCITY,RATIO,STATUS,CREATED_AT");
             writer.newLine();
 
             for (TrafficMonitoringRow row : rows) {
@@ -66,7 +66,7 @@ public class TrafficAnalyticsController {
                         + csv(row.getMaxVelocity() == null ? "" : row.getMaxVelocity().toString()) + ","
                         + csv(formatNumber(row.getVelocityRatio())) + ","
                         + csv(row.getStatus()) + ","
-                        + csv(formatDateTime(row.getUpdatedAt())));
+                        + csv(formatDateTime(row.getCreatedAt())));
                 writer.newLine();
             }
             return true;

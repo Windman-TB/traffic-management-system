@@ -164,14 +164,14 @@ public class TrafficView {
             }
         });
 
-        TableColumn<Traffic, String> updatedAtCol = new TableColumn<>("THỜI GIAN CẬP NHẬT");
-        updatedAtCol.setCellValueFactory(data -> {
-            if (data.getValue().getUpdatedAt() == null) {
+        TableColumn<Traffic, String> createdAtCol = new TableColumn<>("THỜI GIAN TẠO");
+        createdAtCol.setCellValueFactory(data -> {
+            if (data.getValue().getCreatedAt() == null) {
                 return new SimpleStringProperty("");
             }
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            return new SimpleStringProperty(data.getValue().getUpdatedAt().format(formatter));
+            return new SimpleStringProperty(data.getValue().getCreatedAt().format(formatter));
         });
 
         TableColumn<Traffic, Void> actionCol = new TableColumn<>("");
@@ -223,7 +223,7 @@ public class TrafficView {
                 segmentIdCol,
                 velocityCol,
                 statusCol,
-                updatedAtCol,
+                createdAtCol,
                 actionCol
         ));
 
@@ -237,9 +237,9 @@ public class TrafficView {
     private void showTrafficDetail(Traffic traffic) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-        String updatedAtText = traffic.getUpdatedAt() == null
+        String createdAtText = traffic.getCreatedAt() == null
                 ? ""
-                : traffic.getUpdatedAt().format(formatter);
+                : traffic.getCreatedAt().format(formatter);
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Chi tiết lưu lượng");
@@ -249,7 +249,7 @@ public class TrafficView {
                 "Mã đoạn đường: " + traffic.getDisplaySegmentId() + "\n" +
                 "Tốc độ: " + formatVelocity(traffic.getVelocity()) + "\n" +
                 "Tình trạng: " + getTrafficStatus(traffic.getVelocity()) + "\n" +
-                "Thời gian cập nhật: " + updatedAtText
+                "Thời gian tạo: " + createdAtText
         );
         alert.showAndWait();
     }

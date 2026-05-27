@@ -207,8 +207,8 @@ public class TrafficMonitoringView {
             }
         });
 
-        TableColumn<TrafficMonitoringRow, String> updatedCol = new TableColumn<>("Cập nhật");
-        updatedCol.setCellValueFactory(data -> new SimpleStringProperty(controller.formatDateTime(data.getValue().getUpdatedAt())));
+        TableColumn<TrafficMonitoringRow, String> createdCol = new TableColumn<>("Thời gian tạo");
+        createdCol.setCellValueFactory(data -> new SimpleStringProperty(controller.formatDateTime(data.getValue().getCreatedAt())));
 
         table.getColumns().setAll(java.util.List.of(
                 segmentCol,
@@ -218,7 +218,7 @@ public class TrafficMonitoringView {
                 maxCol,
                 ratioCol,
                 statusCol,
-                updatedCol
+                createdCol
         ));
         table.setRowFactory(tv -> {
             TableRow<TrafficMonitoringRow> row = new TableRow<>();
@@ -318,7 +318,7 @@ public class TrafficMonitoringView {
                 "Tốc độ hiện tại: " + controller.formatNumber(row.getVelocity()) + "\n" +
                 "Tốc độ tối đa: " + (row.getMaxVelocity() == null ? "" : row.getMaxVelocity()) + "\n" +
                 "Trạng thái: " + row.getStatus() + "\n" +
-                "Cập nhật: " + controller.formatDateTime(row.getUpdatedAt())
+                "Thời gian tạo: " + controller.formatDateTime(row.getCreatedAt())
         );
         detailLabel.setWrapText(true);
         detailLabel.setMaxWidth(Double.MAX_VALUE);

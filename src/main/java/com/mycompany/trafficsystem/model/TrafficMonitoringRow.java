@@ -20,7 +20,7 @@ public class TrafficMonitoringRow {
     private Double segmentLength;
     private Integer maxVelocity;
     private Double velocity;
-    private LocalDateTime updatedAt;
+    private LocalDateTime createdAt;
 
     public String getSegmentId() {
         return segmentId;
@@ -150,12 +150,12 @@ public class TrafficMonitoringRow {
         this.velocity = velocity;
     }
 
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Double getVelocityRatio() {

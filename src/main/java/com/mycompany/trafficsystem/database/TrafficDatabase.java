@@ -48,7 +48,7 @@ public class TrafficDatabase {
             SELECT STATUS_ID,
                    SEGMENT_ID,
                    VELOCITY,
-                   UPDATED_AT
+                   CREATED_AT
             FROM TRAFFIC
             ORDER BY TO_NUMBER(STATUS_ID)
         """;
@@ -76,12 +76,12 @@ public class TrafficDatabase {
             SELECT STATUS_ID,
                    SEGMENT_ID,
                    VELOCITY,
-                   UPDATED_AT
+                   CREATED_AT
             FROM TRAFFIC
             WHERE LOWER(STATUS_ID) LIKE LOWER(?)
                OR LOWER(SEGMENT_ID) LIKE LOWER(?)
                OR TO_CHAR(VELOCITY) LIKE ?
-               OR TO_CHAR(UPDATED_AT, 'DD/MM/YYYY HH24:MI') LIKE ?
+               OR TO_CHAR(CREATED_AT, 'DD/MM/YYYY HH24:MI') LIKE ?
             ORDER BY TO_NUMBER(STATUS_ID)
         """;
 
@@ -114,7 +114,7 @@ public class TrafficDatabase {
             UPDATE TRAFFIC
             SET SEGMENT_ID = ?,
                 VELOCITY = ?,
-                UPDATED_AT = SYSDATE + 7/24
+                CREATED_AT = SYSDATE + 7/24
             WHERE STATUS_ID = ?
         """;
 
@@ -161,7 +161,7 @@ public Traffic getTrafficById(String statusId) {
         SELECT STATUS_ID,
                SEGMENT_ID,
                VELOCITY,
-               UPDATED_AT
+               CREATED_AT
         FROM TRAFFIC
         WHERE STATUS_ID = ?
     """;
@@ -192,9 +192,9 @@ public Traffic getTrafficById(String statusId) {
         traffic.setSegmentId(rs.getString("SEGMENT_ID"));
         traffic.setVelocity(rs.getDouble("VELOCITY"));
 
-        Timestamp updatedAt = rs.getTimestamp("UPDATED_AT");
-        if (updatedAt != null) {
-            traffic.setUpdatedAt(updatedAt.toLocalDateTime());
+        Timestamp createdAt = rs.getTimestamp("CREATED_AT");
+        if (createdAt != null) {
+            traffic.setCreatedAt(createdAt.toLocalDateTime());
         }
 
         return traffic;
