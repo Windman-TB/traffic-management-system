@@ -6,3 +6,5 @@ target/
 .codex/
 
 .vscode/
+
+nbactions.xml
