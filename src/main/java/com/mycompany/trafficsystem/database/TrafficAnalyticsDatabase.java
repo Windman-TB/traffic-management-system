@@ -30,10 +30,10 @@ public class TrafficAnalyticsDatabase {
                 SELECT t.STATUS_ID,
                        t.SEGMENT_ID,
                        t.VELOCITY,
-                       t.CREATED_AT,
+                       t.RECORDED_AT,
                        ROW_NUMBER() OVER (
                            PARTITION BY t.SEGMENT_ID
-                           ORDER BY t.CREATED_AT DESC, TO_NUMBER(t.STATUS_ID) DESC
+                           ORDER BY t.RECORDED_AT DESC, TO_NUMBER(t.STATUS_ID) DESC
                        ) AS RN
                 FROM TRAFFIC t
             )
@@ -53,7 +53,7 @@ public class TrafficAnalyticsDatabase {
                    s.SEGMENT_LENGTH,
                    s.MAX_VELOCITY,
                    lt.VELOCITY,
-                   lt.CREATED_AT
+                   lt.RECORDED_AT
             FROM latest_traffic lt
             JOIN SEGMENT s ON lt.SEGMENT_ID = s.SEGMENT_ID
             LEFT JOIN STREET st ON s.STREET_ID = st.STREET_ID AND st.IS_DELETED = 0
@@ -65,7 +65,7 @@ public class TrafficAnalyticsDatabase {
         """);
 
         appendCurrentFilters(sql, params, areaId, streetId, minVelocity, maxVelocity, keyword);
-        sql.append(" ORDER BY lt.CREATED_AT DESC, TO_NUMBER(s.SEGMENT_ID) ");
+        sql.append(" ORDER BY lt.RECORDED_AT DESC, TO_NUMBER(s.SEGMENT_ID) ");
 
         try (Connection conn = ConnectDB.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -99,14 +99,14 @@ public class TrafficAnalyticsDatabase {
             SELECT t.STATUS_ID,
                    t.SEGMENT_ID,
                    t.VELOCITY,
-                   t.CREATED_AT
+                   t.RECORDED_AT
             FROM TRAFFIC t
             WHERE t.SEGMENT_ID = ?
         """);
         params.add(segmentId);
 
         appendDateFilters(sql, params, fromDate, toDate);
-        sql.append(" ORDER BY t.CREATED_AT ");
+        sql.append(" ORDER BY t.RECORDED_AT ");
 
         try (Connection conn = ConnectDB.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -120,9 +120,9 @@ public class TrafficAnalyticsDatabase {
                     traffic.setSegmentId(rs.getString("SEGMENT_ID"));
                     traffic.setVelocity(rs.getDouble("VELOCITY"));
 
-                    Timestamp createdAt = rs.getTimestamp("CREATED_AT");
-                    if (createdAt != null) {
-                        traffic.setCreatedAt(createdAt.toLocalDateTime());
+                    Timestamp recordedAt = rs.getTimestamp("RECORDED_AT");
+                    if (recordedAt != null) {
+                        traffic.setRecordedAt(recordedAt.toLocalDateTime());
                     }
 
                     history.add(traffic);
@@ -264,9 +264,9 @@ public class TrafficAnalyticsDatabase {
             return "'Cấp ' || TO_CHAR(st.ROAD_LEVEL)";
         }
         if ("Theo ngày".equals(mode)) {
-            return "TO_CHAR(t.CREATED_AT, 'YYYY-MM-DD')";
+            return "TO_CHAR(t.RECORDED_AT, 'YYYY-MM-DD')";
         }
-        return "TO_CHAR(t.CREATED_AT, 'HH24') || ':00'";
+        return "TO_CHAR(t.RECORDED_AT, 'HH24') || ':00'";
     }
 
     private void appendCurrentFilters(StringBuilder sql, List<Object> params,
@@ -310,12 +310,12 @@ public class TrafficAnalyticsDatabase {
 
     private void appendDateFilters(StringBuilder sql, List<Object> params, LocalDate fromDate, LocalDate toDate) {
         if (fromDate != null) {
-            sql.append(" AND t.CREATED_AT >= ? ");
+            sql.append(" AND t.RECORDED_AT >= ? ");
             params.add(Timestamp.valueOf(fromDate.atStartOfDay()));
         }
 
         if (toDate != null) {
-            sql.append(" AND t.CREATED_AT < ? ");
+            sql.append(" AND t.RECORDED_AT < ? ");
             params.add(Timestamp.valueOf(toDate.plusDays(1).atStartOfDay()));
         }
     }
@@ -339,9 +339,9 @@ public class TrafficAnalyticsDatabase {
         row.setMaxVelocity(getNullableInteger(rs, "MAX_VELOCITY"));
         row.setVelocity(getNullableDouble(rs, "VELOCITY"));
 
-        Timestamp createdAt = rs.getTimestamp("CREATED_AT");
-        if (createdAt != null) {
-            row.setCreatedAt(createdAt.toLocalDateTime());
+        Timestamp recordedAt = rs.getTimestamp("RECORDED_AT");
+        if (recordedAt != null) {
+            row.setRecordedAt(recordedAt.toLocalDateTime());
         }
 
         return row;

@@ -14,16 +14,16 @@ public class Traffic {
     private String statusId;
     private String segmentId;
     private double velocity;
-    private LocalDateTime createdAt;
+    private LocalDateTime recordedAt;
 
     public Traffic() {
     }
 
-    public Traffic(String statusId, String segmentId, double velocity, LocalDateTime createdAt) {
+    public Traffic(String statusId, String segmentId, double velocity, LocalDateTime recordedAt) {
         this.statusId = statusId;
         this.segmentId = segmentId;
         this.velocity = velocity;
-        this.createdAt = createdAt;
+        this.recordedAt = recordedAt;
     }
 
     public String getStatusId() {
@@ -50,12 +50,12 @@ public class Traffic {
         this.velocity = velocity;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+    public LocalDateTime getRecordedAt() {
+        return recordedAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setRecordedAt(LocalDateTime recordedAt) {
+        this.recordedAt = recordedAt;
     }
 
     public String getDisplayStatusId() {

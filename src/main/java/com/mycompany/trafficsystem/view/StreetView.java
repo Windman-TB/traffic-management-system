@@ -394,7 +394,7 @@ public class StreetView {
 
     private ComboBox<Integer> createRoadLevelBox() {
         ComboBox<Integer> roadLevelBox = new ComboBox<>();
-        roadLevelBox.getItems().addAll(1, 2, 3, 4, 5, 6);
+        roadLevelBox.getItems().addAll(1, 2, 3, 4);
         roadLevelBox.setPromptText("Chọn cấp đường");
         roadLevelBox.setMaxWidth(Double.MAX_VALUE);
         return roadLevelBox;

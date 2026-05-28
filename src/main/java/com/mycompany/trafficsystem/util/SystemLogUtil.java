@@ -55,8 +55,8 @@ public class SystemLogUtil {
         log.setBehaviour(limitText(behaviour, 100));
         log.setTargetTable(limitText(targetTable, 50));
         log.setTargetId(limitText(targetId, 20));
-        log.setOldValue(limitText(oldValue, 1000));
-        log.setNewValue(limitText(newValue, 1000));
+        log.setOldValue(limitText(oldValue, 250));
+        log.setNewValue(limitText(newValue, 250));
         log.setLogStatus(status);
 
         systemLogDatabase.insertLog(log);

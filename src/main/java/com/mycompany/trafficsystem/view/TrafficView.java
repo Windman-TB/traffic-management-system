@@ -164,14 +164,14 @@ public class TrafficView {
             }
         });
 
-        TableColumn<Traffic, String> createdAtCol = new TableColumn<>("THỜI GIAN TẠO");
-        createdAtCol.setCellValueFactory(data -> {
-            if (data.getValue().getCreatedAt() == null) {
+        TableColumn<Traffic, String> recordedAtCol = new TableColumn<>("THỜI GIAN ĐO");
+        recordedAtCol.setCellValueFactory(data -> {
+            if (data.getValue().getRecordedAt() == null) {
                 return new SimpleStringProperty("");
             }
 
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-            return new SimpleStringProperty(data.getValue().getCreatedAt().format(formatter));
+            return new SimpleStringProperty(data.getValue().getRecordedAt().format(formatter));
         });
 
         TableColumn<Traffic, Void> actionCol = new TableColumn<>("");
@@ -223,7 +223,7 @@ public class TrafficView {
                 segmentIdCol,
                 velocityCol,
                 statusCol,
-                createdAtCol,
+                recordedAtCol,
                 actionCol
         ));
 
@@ -237,9 +237,9 @@ public class TrafficView {
     private void showTrafficDetail(Traffic traffic) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-        String createdAtText = traffic.getCreatedAt() == null
+        String recordedAtText = traffic.getRecordedAt() == null
                 ? ""
-                : traffic.getCreatedAt().format(formatter);
+                : traffic.getRecordedAt().format(formatter);
 
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Chi tiết lưu lượng");
@@ -249,7 +249,7 @@ public class TrafficView {
                 "Mã đoạn đường: " + traffic.getDisplaySegmentId() + "\n" +
                 "Tốc độ: " + formatVelocity(traffic.getVelocity()) + "\n" +
                 "Tình trạng: " + getTrafficStatus(traffic.getVelocity()) + "\n" +
-                "Thời gian tạo: " + createdAtText
+                "Thời gian đo: " + recordedAtText
         );
         alert.showAndWait();
     }

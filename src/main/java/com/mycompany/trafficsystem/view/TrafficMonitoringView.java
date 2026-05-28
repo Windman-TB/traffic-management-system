@@ -152,13 +152,16 @@ public class TrafficMonitoringView {
         searchButton.setOnAction(event -> loadData());
 
         Button resetButton = createSecondaryButton("Làm mới");
-        resetButton.setOnAction(event -> resetFilters());
+        resetButton.setOnAction(event -> loadData());
+
+        Button clearButton = createSecondaryButton("Xóa lọc");
+        clearButton.setOnAction(event -> resetFilters());
 
         Button exportButton = createPrimaryButton("Xuất CSV");
         exportButton.setOnAction(event -> exportCsv());
 
         filters.getChildren().addAll(areaBox, streetBox, statusBox, minVelocityField, maxVelocityField,
-                keywordField, searchButton, resetButton, exportButton);
+                keywordField, searchButton, resetButton, clearButton, exportButton);
         return filters;
     }
 
@@ -207,8 +210,8 @@ public class TrafficMonitoringView {
             }
         });
 
-        TableColumn<TrafficMonitoringRow, String> createdCol = new TableColumn<>("Thời gian tạo");
-        createdCol.setCellValueFactory(data -> new SimpleStringProperty(controller.formatDateTime(data.getValue().getCreatedAt())));
+        TableColumn<TrafficMonitoringRow, String> recordedCol = new TableColumn<>("Thời gian đo");
+        recordedCol.setCellValueFactory(data -> new SimpleStringProperty(controller.formatDateTime(data.getValue().getRecordedAt())));
 
         table.getColumns().setAll(java.util.List.of(
                 segmentCol,
@@ -218,7 +221,7 @@ public class TrafficMonitoringView {
                 maxCol,
                 ratioCol,
                 statusCol,
-                createdCol
+                recordedCol
         ));
         table.setRowFactory(tv -> {
             TableRow<TrafficMonitoringRow> row = new TableRow<>();
@@ -242,6 +245,7 @@ public class TrafficMonitoringView {
                 keywordField.getText()
         );
         table.setItems(FXCollections.observableArrayList(currentRows));
+        table.refresh();
         updateDashboard();
         loadFilterValues(currentRows);
     }
@@ -318,7 +322,7 @@ public class TrafficMonitoringView {
                 "Tốc độ hiện tại: " + controller.formatNumber(row.getVelocity()) + "\n" +
                 "Tốc độ tối đa: " + (row.getMaxVelocity() == null ? "" : row.getMaxVelocity()) + "\n" +
                 "Trạng thái: " + row.getStatus() + "\n" +
-                "Thời gian tạo: " + controller.formatDateTime(row.getCreatedAt())
+                "Thời gian đo: " + controller.formatDateTime(row.getRecordedAt())
         );
         detailLabel.setWrapText(true);
         detailLabel.setMaxWidth(Double.MAX_VALUE);
