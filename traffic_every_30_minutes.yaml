@@ -1,0 +1,45 @@
+id: load_next_traffic_batch
+namespace: traffic.system
+
+tasks:
+  - id: insert_next_30_minutes_batch
+    type: io.kestra.plugin.jdbc.oracle.Query
+    url: jdbc:oracle:thin:@oracle-xe:1521:XE
+    username: traffic_user
+    password: '123456'
+    sql: |
+      INSERT INTO TRAFFIC (
+          STATUS_ID,
+          SEGMENT_ID,
+          VELOCITY,
+          RECORDED_AT
+      )
+      WITH next_batch AS (
+          SELECT MIN(s.RECORDED_AT) AS START_TIME
+          FROM TRAFFIC_SOURCE s
+          WHERE NOT EXISTS (
+              SELECT 1
+              FROM TRAFFIC t
+              WHERE t.STATUS_ID = s.STATUS_ID
+          )
+      )
+      SELECT
+          s.STATUS_ID,
+          s.SEGMENT_ID,
+          s.VELOCITY,
+          s.RECORDED_AT
+      FROM TRAFFIC_SOURCE s
+      CROSS JOIN next_batch nb
+      WHERE s.RECORDED_AT >= nb.START_TIME
+        AND s.RECORDED_AT < nb.START_TIME + (30 / 1440)
+        AND NOT EXISTS (
+            SELECT 1
+            FROM TRAFFIC t
+            WHERE t.STATUS_ID = s.STATUS_ID
+        )
+    fetchType: NONE
+
+triggers:
+  - id: every_30_minutes
+    type: io.kestra.plugin.core.trigger.Schedule
+    cron: "*/30 * * * *"
