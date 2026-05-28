@@ -247,7 +247,7 @@ public class AreaView {
                 loadData();
                 showInfoAlert("Xóa khu vực thành công.");
             } else {
-                showErrorAlert("Không thể xóa khu vực.");
+                showErrorAlert(areaController.getDeleteRestrictionMessage(area.getAreaId()));
             }
         }
     }

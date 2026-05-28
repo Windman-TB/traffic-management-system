@@ -145,6 +145,13 @@ public class NodeDatabase {
     }
 
     public boolean insertNode(Node node) {
+        Node deletedNode = findDeletedNodeByContent(node);
+
+        if (deletedNode != null) {
+            node.setNodeId(deletedNode.getNodeId());
+            return restoreNode(deletedNode.getNodeId());
+        }
+
         String sql = """
             INSERT INTO NODE (
                 NODE_ID,
@@ -168,6 +175,64 @@ public class NodeDatabase {
 
         } catch (SQLException e) {
             System.out.println("Lỗi thêm nút giao: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    private Node findDeletedNodeByContent(Node node) {
+        String sql = """
+            SELECT NODE_ID,
+                   LATITUDE,
+                   LONGITUDE,
+                   IS_DELETED,
+                   CREATED_AT,
+                   UPDATED_AT
+            FROM NODE
+            WHERE IS_DELETED = 1
+              AND LATITUDE = ?
+              AND LONGITUDE = ?
+            ORDER BY TO_NUMBER(NODE_ID)
+        """;
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setDouble(1, node.getLatitude());
+            ps.setDouble(2, node.getLongitude());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToNode(rs);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Lỗi tìm nút giao đã xóa mềm: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private boolean restoreNode(String nodeId) {
+        String sql = """
+            UPDATE NODE
+            SET IS_DELETED = 0,
+                UPDATED_AT = SYSDATE + 7/24
+            WHERE NODE_ID = ?
+              AND IS_DELETED = 1
+        """;
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, nodeId);
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Lỗi khôi phục nút giao đã xóa mềm: " + e.getMessage());
             e.printStackTrace();
         }
 

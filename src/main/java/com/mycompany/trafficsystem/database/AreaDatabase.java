@@ -124,6 +124,11 @@ public class AreaDatabase {
     }
 
     public boolean softDeleteArea(String areaId) {
+        if (hasActiveSegments(areaId)) {
+            System.out.println("Không thể xóa khu vực vì vẫn còn đoạn đường đang hoạt động.");
+            return false;
+        }
+
         String sql = """
             UPDATE AREA
             SET IS_DELETED = 1,
@@ -140,6 +145,34 @@ public class AreaDatabase {
         } catch (SQLException e) {
             System.out.println("Lỗi xóa khu vực: " + e.getMessage());
             e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean hasActiveSegments(String areaId) {
+        String sql = """
+            SELECT COUNT(*) AS TOTAL
+            FROM SEGMENT
+            WHERE AREA_ID = ?
+              AND IS_DELETED = 0
+        """;
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, areaId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("TOTAL") > 0;
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Lỗi kiểm tra đoạn đường thuộc khu vực: " + e.getMessage());
+            e.printStackTrace();
+            return true;
         }
 
         return false;
@@ -193,6 +226,9 @@ public Area getAreaById(String areaId) {
         if (rs.getTimestamp("UPDATED_AT") != null) {
                 area.setUpdatedAt(rs.getTimestamp("UPDATED_AT").toLocalDateTime());
         }
+
+        area.setIsDeleted(rs.getInt("IS_DELETED"));
+
         return area;
     }
 
@@ -226,6 +262,13 @@ public Area getAreaById(String areaId) {
     }
 
     public boolean insertArea(Area area) {
+        Area deletedArea = findDeletedAreaByContent(area);
+
+        if (deletedArea != null) {
+            area.setAreaId(deletedArea.getAreaId());
+            return restoreArea(deletedArea.getAreaId());
+        }
+
         String sql = """
             INSERT INTO AREA (
                 AREA_ID,
@@ -251,6 +294,67 @@ public Area getAreaById(String areaId) {
 
         } catch (SQLException e) {
             System.out.println("Lỗi thêm khu vực: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    private Area findDeletedAreaByContent(Area area) {
+        String sql = """
+            SELECT AREA_ID,
+                   AREA_NAME,
+                   AREA_TYPE,
+                   OLD_PROVINCE,
+                   CREATED_AT,
+                   UPDATED_AT,
+                   IS_DELETED
+            FROM AREA
+            WHERE IS_DELETED = 1
+              AND LOWER(TRIM(AREA_NAME)) = LOWER(TRIM(?))
+              AND LOWER(TRIM(AREA_TYPE)) = LOWER(TRIM(?))
+              AND LOWER(TRIM(OLD_PROVINCE)) = LOWER(TRIM(?))
+            ORDER BY TO_NUMBER(AREA_ID)
+        """;
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, area.getAreaName());
+            ps.setString(2, area.getAreaType());
+            ps.setString(3, area.getOldProvince());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToArea(rs);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Lỗi tìm khu vực đã xóa mềm: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private boolean restoreArea(String areaId) {
+        String sql = """
+            UPDATE AREA
+            SET IS_DELETED = 0,
+                UPDATED_AT = SYSDATE + 7/24
+            WHERE AREA_ID = ?
+              AND IS_DELETED = 1
+        """;
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, areaId);
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Lỗi khôi phục khu vực đã xóa mềm: " + e.getMessage());
             e.printStackTrace();
         }
 

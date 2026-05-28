@@ -89,6 +89,14 @@ public class AreaController {
         return success;
     }
 
+    public String getDeleteRestrictionMessage(String areaId) {
+        if (areaId != null && areaDatabase.hasActiveSegments(areaId.trim())) {
+            return "Không thể xóa khu vực vì vẫn còn đoạn đường đang hoạt động.";
+        }
+
+        return "Không thể xóa khu vực.";
+    }
+
     public boolean updateArea(String areaId, String areaName, String areaType, String oldProvince) {
         if (areaId == null || areaId.trim().isEmpty()) {
             return false;

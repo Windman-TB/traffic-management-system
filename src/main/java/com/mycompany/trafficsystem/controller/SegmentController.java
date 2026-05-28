@@ -41,31 +41,36 @@ public class SegmentController {
         return segmentDatabase.generateNextSegmentId();
     }
 
-    public boolean addSegment(String streetIdText, String areaIdText, String startNodeIdText,
-                              String endNodeIdText, String segmentLengthText, String maxVelocityText) {
+    public boolean addSegment(String streetIdText, String startNodeIdText,
+                              String endNodeIdText, String maxVelocityText) {
         String streetId = normalizePlainId(streetIdText);
-        String areaId = normalizeAreaId(areaIdText);
         String startNodeId = normalizeNodeId(startNodeIdText);
         String endNodeId = normalizeNodeId(endNodeIdText);
-        Double segmentLength = parseDoubleAllowEmpty(segmentLengthText);
         Integer maxVelocity = parseIntegerAllowEmpty(maxVelocityText);
 
         if (!isValidRequiredId(streetId) || !isValidRequiredId(startNodeId) || !isValidRequiredId(endNodeId)) {
             return false;
         }
 
-        if (!isValidOptionalLength(segmentLength) || !isValidOptionalVelocity(maxVelocity)) {
+        if (startNodeId.equals(endNodeId)) {
+            return false;
+        }
+
+        if (!isValidOptionalVelocity(maxVelocity)) {
             return false;
         }
 
         Segment segment = new Segment();
         segment.setSegmentId(generateNextSegmentId());
         segment.setStreetId(streetId);
-        segment.setAreaId(areaId);
         segment.setStartNodeId(startNodeId);
         segment.setEndNodeId(endNodeId);
-        segment.setSegmentLength(segmentLength);
         segment.setMaxVelocity(maxVelocity);
+
+        if (!segmentDatabase.enrichSegmentGeometry(segment)) {
+            SystemLogUtil.logFailed("Thêm đoạn đường", "SEGMENT", segment.getSegmentId(), null, segmentToLogValue(segment));
+            return false;
+        }
 
         boolean success = segmentDatabase.insertSegment(segment);
 
@@ -78,25 +83,27 @@ public class SegmentController {
         return success;
     }
 
-    public boolean updateSegment(String segmentId, String streetIdText, String areaIdText,
+    public boolean updateSegment(String segmentId, String streetIdText,
                                  String startNodeIdText, String endNodeIdText,
-                                 String segmentLengthText, String maxVelocityText) {
+                                 String maxVelocityText) {
         if (segmentId == null || segmentId.trim().isEmpty()) {
             return false;
         }
 
         String streetId = normalizePlainId(streetIdText);
-        String areaId = normalizeAreaId(areaIdText);
         String startNodeId = normalizeNodeId(startNodeIdText);
         String endNodeId = normalizeNodeId(endNodeIdText);
-        Double segmentLength = parseDoubleAllowEmpty(segmentLengthText);
         Integer maxVelocity = parseIntegerAllowEmpty(maxVelocityText);
 
         if (!isValidRequiredId(streetId) || !isValidRequiredId(startNodeId) || !isValidRequiredId(endNodeId)) {
             return false;
         }
 
-        if (!isValidOptionalLength(segmentLength) || !isValidOptionalVelocity(maxVelocity)) {
+        if (startNodeId.equals(endNodeId)) {
+            return false;
+        }
+
+        if (!isValidOptionalVelocity(maxVelocity)) {
             return false;
         }
 
@@ -106,11 +113,14 @@ public class SegmentController {
         Segment segment = new Segment();
         segment.setSegmentId(cleanSegmentId);
         segment.setStreetId(streetId);
-        segment.setAreaId(areaId);
         segment.setStartNodeId(startNodeId);
         segment.setEndNodeId(endNodeId);
-        segment.setSegmentLength(segmentLength);
         segment.setMaxVelocity(maxVelocity);
+
+        if (!segmentDatabase.enrichSegmentGeometry(segment)) {
+            SystemLogUtil.logFailed("Cập nhật đoạn đường", "SEGMENT", cleanSegmentId, segmentToLogValue(oldSegment), segmentToLogValue(segment));
+            return false;
+        }
 
         boolean success = segmentDatabase.updateSegment(segment);
 
@@ -139,6 +149,14 @@ public class SegmentController {
         }
 
         return success;
+    }
+
+    public String getDeleteRestrictionMessage(String segmentId) {
+        if (segmentId != null && segmentDatabase.hasTrafficInLast30Days(segmentId.trim())) {
+            return "Không thể xóa đoạn đường vì có dữ liệu lưu lượng trong 30 ngày gần đây.";
+        }
+
+        return "Không thể xóa đoạn đường.";
     }
 
     public String normalizeAreaId(String value) {
@@ -183,18 +201,6 @@ public class SegmentController {
         }
     }
 
-    private Double parseDoubleAllowEmpty(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return null;
-        }
-
-        try {
-            return Double.parseDouble(value.trim());
-        } catch (NumberFormatException e) {
-            return Double.NaN;
-        }
-    }
-
     private Integer parseIntegerAllowEmpty(String value) {
         if (value == null || value.trim().isEmpty()) {
             return null;
@@ -209,10 +215,6 @@ public class SegmentController {
 
     private boolean isValidRequiredId(String id) {
         return id != null && !id.trim().isEmpty();
-    }
-
-    private boolean isValidOptionalLength(Double segmentLength) {
-        return segmentLength == null || (!segmentLength.isNaN() && segmentLength >= 0);
     }
 
     private boolean isValidOptionalVelocity(Integer maxVelocity) {

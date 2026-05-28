@@ -169,6 +169,13 @@ public class EmployeeDatabase {
     }
 
     public boolean insertEmployee(Employee employee) {
+        Employee deletedEmployee = findDeletedEmployeeByContent(employee);
+
+        if (deletedEmployee != null) {
+            employee.setEmployeeId(deletedEmployee.getEmployeeId());
+            return restoreEmployee(deletedEmployee.getEmployeeId());
+        }
+
         String sql = """
             INSERT INTO EMPLOYEE (
                 EMPLOYEE_ID,
@@ -208,6 +215,69 @@ public class EmployeeDatabase {
 
         } catch (SQLException e) {
             System.out.println("Lỗi thêm nhân viên: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    private Employee findDeletedEmployeeByContent(Employee employee) {
+        String sql = """
+            SELECT EMPLOYEE_ID,
+                   FULLNAME,
+                   PHONENUMBER,
+                   EMAIL,
+                   DATEOFBIRTH,
+                   GENDER,
+                   ADDRESS,
+                   SALARY,
+                   STATUS,
+                   IS_DELETED
+            FROM EMPLOYEE
+            WHERE IS_DELETED = 1
+              AND LOWER(TRIM(FULLNAME)) = LOWER(TRIM(?))
+              AND TRIM(PHONENUMBER) = TRIM(?)
+              AND LOWER(TRIM(EMAIL)) = LOWER(TRIM(?))
+            ORDER BY EMPLOYEE_ID
+        """;
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, employee.getFullName());
+            ps.setString(2, employee.getPhoneNumber());
+            ps.setString(3, employee.getEmail());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToEmployee(rs);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Lỗi tìm nhân viên đã xóa mềm: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private boolean restoreEmployee(String employeeId) {
+        String sql = """
+            UPDATE EMPLOYEE
+            SET IS_DELETED = 0
+            WHERE EMPLOYEE_ID = ?
+              AND IS_DELETED = 1
+        """;
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, employeeId);
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Lỗi khôi phục nhân viên đã xóa mềm: " + e.getMessage());
             e.printStackTrace();
         }
 

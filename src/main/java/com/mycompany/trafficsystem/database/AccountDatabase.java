@@ -561,6 +561,20 @@ public class AccountDatabase {
             conn = ConnectDB.getConnection();
             conn.setAutoCommit(false);
 
+            AccountManagement deletedAccount = findDeletedAccountForRestore(conn, account);
+            if (deletedAccount != null) {
+                account.setAccountId(deletedAccount.getAccountId());
+                boolean restored = restoreAccountForManagement(conn, account, password);
+
+                if (!restored) {
+                    conn.rollback();
+                    return false;
+                }
+
+                conn.commit();
+                return true;
+            }
+
             try (PreparedStatement ps = conn.prepareStatement(insertAccountSql)) {
                 ps.setString(1, account.getAccountId());
                 ps.setString(2, account.getEmployeeId());
@@ -603,6 +617,104 @@ public class AccountDatabase {
         }
 
         return false;
+    }
+
+    private AccountManagement findDeletedAccountForRestore(Connection conn, AccountManagement account) throws SQLException {
+        String sql = """
+            SELECT a.ACCOUNT_ID,
+                   a.EMPLOYEE_ID,
+                   a.USERNAME,
+                   e.FULLNAME,
+                   ar.ROLE_NAME,
+                   a.STATUS,
+                   a.CREATED_AT,
+                   a.UPDATED_AT
+            FROM ACCOUNT a
+            JOIN EMPLOYEE e
+                ON a.EMPLOYEE_ID = e.EMPLOYEE_ID
+            LEFT JOIN ACCOUNT_ROLE ar
+                ON a.ACCOUNT_ID = ar.ACCOUNT_ID
+            WHERE a.IS_DELETED = 1
+              AND (a.USERNAME = ? OR a.EMPLOYEE_ID = ?)
+            ORDER BY CASE WHEN a.USERNAME = ? THEN 0 ELSE 1 END,
+                     a.ACCOUNT_ID
+        """;
+
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, account.getUsername());
+            ps.setString(2, account.getEmployeeId());
+            ps.setString(3, account.getUsername());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToAccountManagement(rs);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private boolean restoreAccountForManagement(Connection conn, AccountManagement account, String password) throws SQLException {
+        String updateAccountSql = """
+            UPDATE ACCOUNT
+            SET EMPLOYEE_ID = ?,
+                USERNAME = ?,
+                PASSWORD = ?,
+                STATUS = ?,
+                UPDATED_AT = SYSDATE + 7/24,
+                IS_DELETED = 0
+            WHERE ACCOUNT_ID = ?
+              AND IS_DELETED = 1
+        """;
+
+        String updateRoleSql = """
+            UPDATE ACCOUNT_ROLE
+            SET ROLE_NAME = ?,
+                ASSIGNED_AT = SYSDATE + 7/24
+            WHERE ACCOUNT_ID = ?
+        """;
+
+        String insertRoleSql = """
+            INSERT INTO ACCOUNT_ROLE (
+                ACCOUNT_ROLE_ID,
+                ACCOUNT_ID,
+                ROLE_NAME,
+                ASSIGNED_AT
+            ) VALUES (?, ?, ?, SYSDATE + 7/24)
+        """;
+
+        int updatedAccountRows;
+        try (PreparedStatement ps = conn.prepareStatement(updateAccountSql)) {
+            ps.setString(1, account.getEmployeeId());
+            ps.setString(2, account.getUsername());
+            ps.setString(3, password);
+            ps.setString(4, account.getStatus());
+            ps.setString(5, account.getAccountId());
+            updatedAccountRows = ps.executeUpdate();
+        }
+
+        if (updatedAccountRows == 0) {
+            return false;
+        }
+
+        int updatedRoleRows;
+        try (PreparedStatement ps = conn.prepareStatement(updateRoleSql)) {
+            ps.setString(1, account.getRoleName());
+            ps.setString(2, account.getAccountId());
+            updatedRoleRows = ps.executeUpdate();
+        }
+
+        if (updatedRoleRows == 0) {
+            try (PreparedStatement ps = conn.prepareStatement(insertRoleSql)) {
+                ps.setString(1, generateNextAccountRoleId(conn));
+                ps.setString(2, account.getAccountId());
+                ps.setString(3, account.getRoleName());
+                ps.executeUpdate();
+            }
+        }
+
+        return true;
     }
 
     public boolean updateAccountForManagement(AccountManagement account, String newPassword) {

@@ -243,7 +243,7 @@ public class StreetView {
                 loadData();
                 showInfoAlert("Xóa tuyến đường thành công.");
             } else {
-                showErrorAlert("Không thể xóa tuyến đường.");
+                showErrorAlert(streetController.getDeleteRestrictionMessage(street.getStreetId()));
             }
         }
     }

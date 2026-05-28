@@ -276,7 +276,7 @@ public class SegmentView {
                 loadData();
                 showInfoAlert("Xóa đoạn đường thành công.");
             } else {
-                showErrorAlert("Không thể xóa đoạn đường.");
+                showErrorAlert(segmentController.getDeleteRestrictionMessage(segment.getSegmentId()));
             }
         }
     }
@@ -298,23 +298,17 @@ public class SegmentView {
         TextField streetIdField = new TextField();
         streetIdField.setPromptText("Ví dụ: 8");
 
-        TextField areaIdField = new TextField();
-        areaIdField.setPromptText("Ví dụ: 76 hoặc KV076");
-
         TextField startNodeIdField = new TextField();
         startNodeIdField.setPromptText("Ví dụ: 455427 hoặc NG455427");
 
         TextField endNodeIdField = new TextField();
         endNodeIdField.setPromptText("Ví dụ: 455453 hoặc NG455453");
 
-        TextField segmentLengthField = new TextField();
-        segmentLengthField.setPromptText("Ví dụ: 19.58");
-
         TextField maxVelocityField = new TextField();
         maxVelocityField.setPromptText("Có thể để trống. Ví dụ: 60");
 
-        addFieldsToForm(form, segmentIdField, streetIdField, areaIdField, startNodeIdField,
-                endNodeIdField, segmentLengthField, maxVelocityField);
+        addFieldsToForm(form, segmentIdField, streetIdField, startNodeIdField,
+                endNodeIdField, maxVelocityField);
 
         dialog.getDialogPane().setContent(form);
 
@@ -324,7 +318,6 @@ public class SegmentView {
                     streetIdField.getText(),
                     startNodeIdField.getText(),
                     endNodeIdField.getText(),
-                    segmentLengthField.getText(),
                     maxVelocityField.getText()
             );
 
@@ -336,10 +329,8 @@ public class SegmentView {
 
             boolean success = segmentController.addSegment(
                     streetIdField.getText(),
-                    areaIdField.getText(),
                     startNodeIdField.getText(),
                     endNodeIdField.getText(),
-                    segmentLengthField.getText(),
                     maxVelocityField.getText()
             );
 
@@ -370,14 +361,12 @@ public class SegmentView {
         segmentIdField.setEditable(false);
 
         TextField streetIdField = new TextField(segment.getDisplayStreetId());
-        TextField areaIdField = new TextField(segment.getDisplayAreaId());
         TextField startNodeIdField = new TextField(segment.getDisplayStartNodeId());
         TextField endNodeIdField = new TextField(segment.getDisplayEndNodeId());
-        TextField segmentLengthField = new TextField(formatDouble(segment.getSegmentLength()));
         TextField maxVelocityField = new TextField(formatInteger(segment.getMaxVelocity()));
 
-        addFieldsToForm(form, segmentIdField, streetIdField, areaIdField, startNodeIdField,
-                endNodeIdField, segmentLengthField, maxVelocityField);
+        addFieldsToForm(form, segmentIdField, streetIdField, startNodeIdField,
+                endNodeIdField, maxVelocityField);
 
         dialog.getDialogPane().setContent(form);
 
@@ -387,7 +376,6 @@ public class SegmentView {
                     streetIdField.getText(),
                     startNodeIdField.getText(),
                     endNodeIdField.getText(),
-                    segmentLengthField.getText(),
                     maxVelocityField.getText()
             );
 
@@ -400,10 +388,8 @@ public class SegmentView {
             boolean success = segmentController.updateSegment(
                     segment.getSegmentId(),
                     streetIdField.getText(),
-                    areaIdField.getText(),
                     startNodeIdField.getText(),
                     endNodeIdField.getText(),
-                    segmentLengthField.getText(),
                     maxVelocityField.getText()
             );
 
@@ -436,8 +422,7 @@ public class SegmentView {
     }
 
     private void addFieldsToForm(GridPane form, TextField segmentIdField, TextField streetIdField,
-                                 TextField areaIdField, TextField startNodeIdField,
-                                 TextField endNodeIdField, TextField segmentLengthField,
+                                 TextField startNodeIdField, TextField endNodeIdField,
                                  TextField maxVelocityField) {
         form.add(new Label("Mã đoạn đường:"), 0, 0);
         form.add(segmentIdField, 1, 0);
@@ -445,24 +430,18 @@ public class SegmentView {
         form.add(new Label("Mã tuyến đường:"), 0, 1);
         form.add(streetIdField, 1, 1);
 
-        form.add(new Label("Mã khu vực:"), 0, 2);
-        form.add(areaIdField, 1, 2);
+        form.add(new Label("Nút đầu:"), 0, 2);
+        form.add(startNodeIdField, 1, 2);
 
-        form.add(new Label("Nút đầu:"), 0, 3);
-        form.add(startNodeIdField, 1, 3);
+        form.add(new Label("Nút cuối:"), 0, 3);
+        form.add(endNodeIdField, 1, 3);
 
-        form.add(new Label("Nút cuối:"), 0, 4);
-        form.add(endNodeIdField, 1, 4);
-
-        form.add(new Label("Chiều dài:"), 0, 5);
-        form.add(segmentLengthField, 1, 5);
-
-        form.add(new Label("Tốc độ tối đa:"), 0, 6);
-        form.add(maxVelocityField, 1, 6);
+        form.add(new Label("Tốc độ tối đa:"), 0, 4);
+        form.add(maxVelocityField, 1, 4);
     }
 
     private String validateSegmentInput(String streetIdText, String startNodeIdText, String endNodeIdText,
-                                        String segmentLengthText, String maxVelocityText) {
+                                        String maxVelocityText) {
         if (isBlank(streetIdText)) {
             return "Mã tuyến đường không được để trống.";
         }
@@ -475,11 +454,8 @@ public class SegmentView {
             return "Mã nút cuối không được để trống.";
         }
 
-        if (!isBlank(segmentLengthText)) {
-            Double segmentLength = parseDouble(segmentLengthText);
-            if (segmentLength == null || segmentLength < 0) {
-                return "Chiều dài đoạn đường phải là số lớn hơn hoặc bằng 0. Ví dụ: 19.58";
-            }
+        if (startNodeIdText.trim().equalsIgnoreCase(endNodeIdText.trim())) {
+            return "Nút đầu và nút cuối không được trùng nhau.";
         }
 
         if (!isBlank(maxVelocityText)) {
@@ -494,14 +470,6 @@ public class SegmentView {
 
     private boolean isBlank(String value) {
         return value == null || value.trim().isEmpty();
-    }
-
-    private Double parseDouble(String value) {
-        try {
-            return Double.parseDouble(value.trim());
-        } catch (NumberFormatException e) {
-            return null;
-        }
     }
 
     private Integer parseInteger(String value) {

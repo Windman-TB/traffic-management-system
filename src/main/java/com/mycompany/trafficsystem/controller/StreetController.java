@@ -115,6 +115,14 @@ public class StreetController {
         return success;
     }
 
+    public String getDeleteRestrictionMessage(String streetId) {
+        if (streetId != null && streetDatabase.hasActiveSegments(streetId.trim())) {
+            return "Không thể xóa tuyến đường vì vẫn còn đoạn đường đang hoạt động.";
+        }
+
+        return "Không thể xóa tuyến đường.";
+    }
+
     private boolean isValidStreetName(String streetName) {
         return streetName != null && !streetName.trim().isEmpty();
     }

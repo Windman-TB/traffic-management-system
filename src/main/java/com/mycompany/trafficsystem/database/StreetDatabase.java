@@ -146,6 +146,13 @@ public class StreetDatabase {
     }
 
     public boolean insertStreet(Street street) {
+        Street deletedStreet = findDeletedStreetByContent(street);
+
+        if (deletedStreet != null) {
+            street.setStreetId(deletedStreet.getStreetId());
+            return restoreStreet(deletedStreet.getStreetId());
+        }
+
         String sql = """
             INSERT INTO STREET (
                 STREET_ID,
@@ -171,6 +178,67 @@ public class StreetDatabase {
 
         } catch (SQLException e) {
             System.out.println("Lỗi thêm tuyến đường: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    private Street findDeletedStreetByContent(Street street) {
+        String sql = """
+            SELECT STREET_ID,
+                   STREET_NAME,
+                   STREET_TYPE,
+                   ROAD_LEVEL,
+                   CREATED_AT,
+                   IS_DELETED,
+                   UPDATED_AT
+            FROM STREET
+            WHERE IS_DELETED = 1
+              AND LOWER(TRIM(STREET_NAME)) = LOWER(TRIM(?))
+              AND LOWER(TRIM(STREET_TYPE)) = LOWER(TRIM(?))
+              AND ROAD_LEVEL = ?
+            ORDER BY TO_NUMBER(STREET_ID)
+        """;
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, street.getStreetName());
+            ps.setString(2, street.getStreetType());
+            ps.setInt(3, street.getRoadLevel());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapResultSetToStreet(rs);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Lỗi tìm tuyến đường đã xóa mềm: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    private boolean restoreStreet(String streetId) {
+        String sql = """
+            UPDATE STREET
+            SET IS_DELETED = 0,
+                UPDATED_AT = SYSDATE + 7/24
+            WHERE STREET_ID = ?
+              AND IS_DELETED = 1
+        """;
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, streetId);
+            return ps.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.out.println("Lỗi khôi phục tuyến đường đã xóa mềm: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -207,6 +275,11 @@ public class StreetDatabase {
     }
 
     public boolean softDeleteStreet(String streetId) {
+        if (hasActiveSegments(streetId)) {
+            System.out.println("Không thể xóa tuyến đường vì vẫn còn đoạn đường đang hoạt động.");
+            return false;
+        }
+
         String sql = """
             UPDATE STREET
             SET IS_DELETED = 1,
@@ -224,6 +297,34 @@ public class StreetDatabase {
         } catch (SQLException e) {
             System.out.println("Lỗi xóa tuyến đường: " + e.getMessage());
             e.printStackTrace();
+        }
+
+        return false;
+    }
+
+    public boolean hasActiveSegments(String streetId) {
+        String sql = """
+            SELECT COUNT(*) AS TOTAL
+            FROM SEGMENT
+            WHERE STREET_ID = ?
+              AND IS_DELETED = 0
+        """;
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, streetId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("TOTAL") > 0;
+                }
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Lỗi kiểm tra đoạn đường thuộc tuyến đường: " + e.getMessage());
+            e.printStackTrace();
+            return true;
         }
 
         return false;
