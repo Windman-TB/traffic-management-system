@@ -180,6 +180,20 @@ public class SegmentDatabase {
         return true;
     }
 
+    public double[] getSegmentMidpoint(String startNodeId, String endNodeId) {
+        Coordinate start = getNodeCoordinate(startNodeId);
+        Coordinate end = getNodeCoordinate(endNodeId);
+
+        if (start == null || end == null) {
+            return null;
+        }
+
+        return new double[] {
+                (start.latitude + end.latitude) / 2.0,
+                (start.longitude + end.longitude) / 2.0
+        };
+    }
+
     public boolean insertSegment(Segment segment) {
         Segment deletedSegment = findDeletedSegmentByContent(segment);
 

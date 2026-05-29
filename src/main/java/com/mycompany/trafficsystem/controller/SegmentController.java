@@ -2,6 +2,7 @@ package com.mycompany.trafficsystem.controller;
 
 import com.mycompany.trafficsystem.database.SegmentDatabase;
 import com.mycompany.trafficsystem.model.Segment;
+import com.mycompany.trafficsystem.service.GoongSpeedLimitService;
 import com.mycompany.trafficsystem.util.SystemLogUtil;
 
 import java.util.List;
@@ -9,9 +10,11 @@ import java.util.List;
 public class SegmentController {
 
     private final SegmentDatabase segmentDatabase;
+    private final GoongSpeedLimitService goongSpeedLimitService;
 
     public SegmentController() {
         this.segmentDatabase = new SegmentDatabase();
+        this.goongSpeedLimitService = new GoongSpeedLimitService();
     }
 
     public List<Segment> getAllSegments() {
@@ -72,6 +75,8 @@ public class SegmentController {
             return false;
         }
 
+        autoFillMaxVelocityIfEmpty(segment);
+
         boolean success = segmentDatabase.insertSegment(segment);
 
         if (success) {
@@ -121,6 +126,8 @@ public class SegmentController {
             SystemLogUtil.logFailed("Cập nhật đoạn đường", "SEGMENT", cleanSegmentId, segmentToLogValue(oldSegment), segmentToLogValue(segment));
             return false;
         }
+
+        autoFillMaxVelocityIfEmpty(segment);
 
         boolean success = segmentDatabase.updateSegment(segment);
 
@@ -219,6 +226,27 @@ public class SegmentController {
 
     private boolean isValidOptionalVelocity(Integer maxVelocity) {
         return maxVelocity == null || maxVelocity >= 0;
+    }
+
+    private void autoFillMaxVelocityIfEmpty(Segment segment) {
+        if (segment.getMaxVelocity() != null) {
+            return;
+        }
+
+        double[] midpoint = segmentDatabase.getSegmentMidpoint(
+                segment.getStartNodeId(),
+                segment.getEndNodeId()
+        );
+
+        if (midpoint == null) {
+            return;
+        }
+
+        Integer speedLimit = goongSpeedLimitService.getSpeedLimit(midpoint[0], midpoint[1]);
+
+        if (speedLimit != null && speedLimit >= 0) {
+            segment.setMaxVelocity(speedLimit);
+        }
     }
 
     private String segmentToLogValue(Segment segment) {
